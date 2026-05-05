@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "public": true,
+  "functions": {
+    "server.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "^/api(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "^/webhooks(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/public"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "DATABASE_URL": "@DATABASE_URL",
+    "CLAUDE_API_KEY": "@CLAUDE_API_KEY",
+    "STRIPE_SECRET_KEY": "@STRIPE_SECRET_KEY",
+    "JWT_SECRET": "@JWT_SECRET"
+  }
+}

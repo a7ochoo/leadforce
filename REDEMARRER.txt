@@ -1,0 +1,59 @@
+═══════════════════════════════════════════════════════════════
+  LEADFORCE - GUIDE DE DÉMARRAGE RAPIDE
+═══════════════════════════════════════════════════════════════
+
+✅ TOUT EST PRÊT! Voici comment démarrer:
+
+═══════════════════════════════════════════════════════════════
+TERMINAL 1: BACKEND
+═══════════════════════════════════════════════════════════════
+
+cd "C:\Users\Administrateur\Documents\leadforce"
+npm run dev
+
+Tu devrais voir:
+✅ SQLite database connected
+🚀 LeadForce server running on port 3000
+
+═══════════════════════════════════════════════════════════════
+TERMINAL 2: FRONTEND
+═══════════════════════════════════════════════════════════════
+
+cd "C:\Users\Administrateur\Documents\leadforce\frontend"
+npm start
+
+Tu devrais voir:
+compiled successfully!
+
+═══════════════════════════════════════════════════════════════
+NAVIGATEUR
+═══════════════════════════════════════════════════════════════
+
+Va à: http://localhost:3001
+
+═══════════════════════════════════════════════════════════════
+TESTER L'INSCRIPTION
+═══════════════════════════════════════════════════════════════
+
+1. Clique "S'inscrire"
+2. Remplis le formulaire:
+   - Prénom: Test
+   - Nom: User
+   - Email: test@example.com
+   - Mot de passe: Test123456
+
+3. Clique "S'inscrire"
+
+4. Tu devrais être redirigé au Dashboard!
+
+═══════════════════════════════════════════════════════════════
+✅ SUCCÈS!
+═══════════════════════════════════════════════════════════════
+
+Ton application SaaS LeadForce est PRÊTE! 🎉
+
+Backend: http://localhost:3000
+Frontend: http://localhost:3001
+Database: SQLite (leadforce.db)
+
+═══════════════════════════════════════════════════════════════

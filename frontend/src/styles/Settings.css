@@ -1,0 +1,30 @@
+﻿.settings-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.settings-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.settings-tab {
+  padding: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.settings-tab.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+}
+.integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+.integration-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
