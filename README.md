@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # LeadForce 🚀
 
 **Qualification automatique de leads immobiliers en temps réel**
@@ -209,3 +210,7 @@ MIT License - See LICENSE file
 ---
 
 **LeadForce © 2025 - Built with ❤️ for real estate agents**
+=======
+# leadforce
+AI-powered lead qualification for real estate
+>>>>>>> ccd0bf34528ded56a0d5c719d8de2dfe537311cb
