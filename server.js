@@ -15,14 +15,9 @@ app.use(express.json());
 
 // Database connection (PostgreSQL)
 const pool = new Pool({
-  host: process.env.PGHOST,
-  port: process.env.PGPORT,
-  database: process.env.PGDATABASE,
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  ssl: false
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
-
 
 pool.on('error', (err) => {
   console.error('❌ Database connection failed:', err.message);
