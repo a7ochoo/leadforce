@@ -16,7 +16,7 @@ app.use(express.json());
 // Database connection (PostgreSQL)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: false
 });
 
 pool.on('error', (err) => {
