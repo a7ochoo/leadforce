@@ -23,6 +23,7 @@ const pool = new Pool({
   ssl: false
 });
 
+
 pool.on('error', (err) => {
   console.error('❌ Database connection failed:', err.message);
 });
