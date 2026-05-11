@@ -11,7 +11,7 @@ function Login() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const API_URL = "http://localhost:3000";
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
   const handleRegister = async (e) => {
     e.preventDefault();
