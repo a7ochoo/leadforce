@@ -3,17 +3,13 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import TrialExpired from "./pages/TrialExpired";
 import AdminDashboard from "./pages/AdminDashboard";
-import Success from "./pages/Success";
 
 function App() {
   const [page, setPage] = useState("loading");
 
   useEffect(() => {
     const path = window.location.pathname;
-
-    // Route success
-    if (path === "/success") { setPage("success"); return; }
-
+    
     // Route admin secrète
     if (path === "/admin-secret-xyz") {
       const token = localStorage.getItem("token");
@@ -32,11 +28,14 @@ function App() {
 
     const token = localStorage.getItem("token");
     const userStr = localStorage.getItem("user");
+
     if (!token || !userStr) { setPage("login"); return; }
+
     try {
       const user = JSON.parse(userStr);
       const trialEnd = user.trial_ends_date ? new Date(user.trial_ends_date) : null;
       const now = new Date();
+
       if (user.status === "active") {
         setPage("dashboard");
       } else if (trialEnd && trialEnd < now) {
@@ -51,7 +50,6 @@ function App() {
   if (page === "login") return <Login />;
   if (page === "admin") return <AdminDashboard />;
   if (page === "trial_expired") return <TrialExpired />;
-  if (page === "success") return <Success />;
   return <Dashboard />;
 }
 
