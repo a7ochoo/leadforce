@@ -386,12 +386,7 @@ function Dashboard() {
                 <div className="settings-row"><span className="settings-label">Plan actuel</span><span className="settings-value"><span className="plan-badge">Essai gratuit</span></span></div>
                 <div className="settings-row"><span className="settings-label">Essai expire le</span><span className="settings-value">{user.trial_ends_date ? new Date(user.trial_ends_date).toLocaleDateString("fr-FR") : "—"}</span></div>
               </div>
-              <div className="settings-section">
-                <h3>Canaux connectés</h3>
-                <div className="settings-row"><span className="settings-label">Email</span><span className="settings-value">{emailStatus.connected ? <span className="connected-badge">✓ {emailStatus.email}</span> : <span style={{color:"#AAA"}}>Non connecté</span>}</span></div>
-                <div className="settings-row"><span className="settings-label">WhatsApp</span><span className="settings-value" style={{color:"#AAA"}}>Non connecté</span></div>
-              </div>
-              <div className="settings-section">
+                           <div className="settings-section">
                 <h3>Danger</h3>
                 <button className="danger-btn" onClick={() => { localStorage.clear(); window.location.href = "/"; }}><i className="ti ti-logout" aria-hidden="true"></i> Se déconnecter</button>
               </div>
