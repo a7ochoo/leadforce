@@ -12,56 +12,7 @@ const PIPELINE_STAGES = [
   { id: "perdu", label: "Perdu", color: "red" },
 ];
 
-const MOCK_LEADS = [
-  { id: 1, name: "Marie Dupont", type: "Achat", detail: "T3 Paris 15e", budget: "450k€", channel: "email", score: "moyen", stage: "nouveau", date: "Il y a 2h", timeline: [
-    { icon: "ti-mail", label: "Message reçu", desc: "Email — Intéressée par un T3 dans le 15e", time: "Aujourd'hui 14h32", done: true },
-    { icon: "ti-robot", label: "Qualification auto", desc: "Score MOYEN — Budget ok, délai incertain", time: "Aujourd'hui 14h33", done: true },
-    { icon: "ti-bell", label: "Agent notifié", desc: "Notification envoyée par email", time: "Aujourd'hui 14h33", done: true },
-    { icon: "ti-calendar", label: "Visite à programmer", desc: "En attente de confirmation", time: "", done: false, active: false },
-    { icon: "ti-file-text", label: "Offre à soumettre", desc: "En attente", time: "", done: false },
-    { icon: "ti-home-check", label: "Achat finalisé", desc: "En attente", time: "", done: false },
-  ]},
-  { id: 2, name: "Karim Benali", type: "Location", detail: "Studio Lyon", budget: "800€/mois", channel: "whatsapp", score: "faible", stage: "nouveau", date: "Il y a 5h", timeline: [
-    { icon: "ti-brand-whatsapp", label: "Message reçu", desc: "WhatsApp — Cherche un studio pas trop cher", time: "Aujourd'hui 11h15", done: true },
-    { icon: "ti-robot", label: "Qualification auto", desc: "Score FAIBLE — Budget très serré, pas de garant", time: "Aujourd'hui 11h15", done: true },
-    { icon: "ti-bell", label: "Agent notifié", desc: "Notification envoyée", time: "Aujourd'hui 11h16", done: true },
-    { icon: "ti-calendar", label: "Visite à programmer", desc: "En attente", time: "", done: false },
-    { icon: "ti-file-text", label: "Offre à soumettre", desc: "En attente", time: "", done: false },
-    { icon: "ti-home-check", label: "Achat finalisé", desc: "En attente", time: "", done: false },
-  ]},
-  { id: 3, name: "Sophie Martin", type: "Achat", detail: "Maison Lyon", budget: "380k€", channel: "email", score: "bon", stage: "qualifie", date: "Hier", timeline: [
-    { icon: "ti-mail", label: "Message reçu", desc: "Email — Cherche maison avec jardin", time: "Hier 09h00", done: true },
-    { icon: "ti-robot", label: "Qualification auto", desc: "Score BON — Financement confirmé, délai 1 mois", time: "Hier 09h01", done: true },
-    { icon: "ti-bell", label: "Agent notifié", desc: "Notifié — Lead BON prioritaire", time: "Hier 09h01", done: true },
-    { icon: "ti-calendar", label: "Visite à programmer", desc: "Contact en cours avec l'agent", time: "Hier 16h00", done: true },
-    { icon: "ti-file-text", label: "Offre à soumettre", desc: "En attente après visite", time: "", done: false },
-    { icon: "ti-home-check", label: "Achat finalisé", desc: "En attente", time: "", done: false },
-  ]},
-  { id: 4, name: "Ahmed Berred", type: "Achat", detail: "Appart Bordeaux", budget: "280k€", channel: "whatsapp", score: "bon", stage: "visite", date: "Visite Sam. 15h", timeline: [
-    { icon: "ti-brand-whatsapp", label: "Message reçu", desc: "WhatsApp — Intéressé par appart Bordeaux", time: "Lun. 14h32", done: true },
-    { icon: "ti-robot", label: "Qualification auto", desc: "Score BON — Budget confirmé, prêt accordé", time: "Lun. 14h33", done: true },
-    { icon: "ti-bell", label: "Agent notifié", desc: "Notifié — Lead BON à traiter", time: "Lun. 14h33", done: true },
-    { icon: "ti-calendar", label: "Visite programmée", desc: "Samedi 13 mai à 15h00 — 12 rue de la Paix", time: "Sam. 15h00", done: false, active: true },
-    { icon: "ti-file-text", label: "Offre à soumettre", desc: "En attente après la visite", time: "", done: false },
-    { icon: "ti-home-check", label: "Achat finalisé", desc: "En attente", time: "", done: false },
-  ]},
-  { id: 5, name: "Pierre Leblanc", type: "Achat", detail: "Villa Marseille", budget: "320k€", channel: "whatsapp", score: "bon", stage: "offre", date: "Offre à 320k€", timeline: [
-    { icon: "ti-brand-whatsapp", label: "Message reçu", desc: "WhatsApp — Villa avec piscine", time: "Il y a 5j", done: true },
-    { icon: "ti-robot", label: "Qualification auto", desc: "Score BON — Budget solide", time: "Il y a 5j", done: true },
-    { icon: "ti-bell", label: "Agent notifié", desc: "Notifié", time: "Il y a 5j", done: true },
-    { icon: "ti-calendar", label: "Visite effectuée", desc: "Visite réalisée le 8 mai", time: "8 mai", done: true },
-    { icon: "ti-file-text", label: "Offre soumise", desc: "Offre à 320 000€ — En négociation", time: "Hier", done: true, active: true },
-    { icon: "ti-home-check", label: "Achat finalisé", desc: "En attente de signature", time: "", done: false },
-  ]},
-  { id: 6, name: "Julie Bernard", type: "Achat", detail: "T4 Paris 11e", budget: "485k€", channel: "email", score: "bon", stage: "vendu", date: "Vendu 485k€", timeline: [
-    { icon: "ti-mail", label: "Message reçu", desc: "Email — Grand appartement familial", time: "Il y a 3 sem.", done: true },
-    { icon: "ti-robot", label: "Qualification auto", desc: "Score BON", time: "Il y a 3 sem.", done: true },
-    { icon: "ti-bell", label: "Agent notifié", desc: "Notifié", time: "Il y a 3 sem.", done: true },
-    { icon: "ti-calendar", label: "Visite effectuée", desc: "Visite réalisée", time: "Il y a 2 sem.", done: true },
-    { icon: "ti-file-text", label: "Offre acceptée", desc: "Offre à 485 000€ acceptée", time: "Il y a 1 sem.", done: true },
-    { icon: "ti-home-check", label: "Achat finalisé", desc: "Compromis signé — Vente conclue!", time: "Hier", done: true },
-  ]},
-];
+const MOCK_LEADS = [];
 
 function ScoreBadge({ score }) {
   const map = { bon: ["score-high", "BON"], moyen: ["score-mid", "MOYEN"], faible: ["score-low", "FAIBLE"] };
