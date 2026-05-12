@@ -1,4 +1,3 @@
--- Create users table
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR(36) PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -12,7 +11,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create conversations table
 CREATE TABLE IF NOT EXISTS conversations (
   id VARCHAR(36) PRIMARY KEY,
   user_id VARCHAR(36) NOT NULL REFERENCES users(id),
@@ -26,7 +24,6 @@ CREATE TABLE IF NOT EXISTS conversations (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create scores table
 CREATE TABLE IF NOT EXISTS scores (
   id VARCHAR(36) PRIMARY KEY,
   conversation_id VARCHAR(36) NOT NULL REFERENCES conversations(id),
@@ -34,7 +31,3 @@ CREATE TABLE IF NOT EXISTS scores (
   classification VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Create indexes
-CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id);
-CREATE INDEX IF NOT EXISTS idx_scores_conversation ON scores(conversation_id);

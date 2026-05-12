@@ -16,8 +16,9 @@ app.use(express.json());
 // Database connection (PostgreSQL)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('railway') ? { rejectUnauthorized: false } : false
+  ssl: { rejectUnauthorized: false }
 });
+
 pool.on('error', (err) => {
   console.error('❌ Database connection failed:', err.message);
 });
@@ -314,47 +315,7 @@ app.post('/api/stripe/billing-portal', authenticateToken, async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-// ==================== SETUP DB ====================
-app.get('/api/setup', async (req, res) => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(36) PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        first_name VARCHAR(100),
-        last_name VARCHAR(100),
-        plan VARCHAR(50) DEFAULT 'agent',
-        status VARCHAR(50) DEFAULT 'trial',
-        trial_ends_date TIMESTAMP,
-        stripe_customer_id VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS conversations (
-        id VARCHAR(36) PRIMARY KEY,
-        user_id VARCHAR(36) NOT NULL REFERENCES users(id),
-        prospect_name VARCHAR(255),
-        prospect_email VARCHAR(255),
-        prospect_phone VARCHAR(20),
-        type VARCHAR(50),
-        channel VARCHAR(50),
-        classification VARCHAR(50),
-        score INTEGER,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS scores (
-        id VARCHAR(36) PRIMARY KEY,
-        conversation_id VARCHAR(36) NOT NULL REFERENCES conversations(id),
-        score INTEGER,
-        classification VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    res.json({ success: true, message: 'Tables created!' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+
 // ==================== HEALTH CHECK ====================
 
 app.get('/api/health', async (req, res) => {
@@ -383,3 +344,191 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+// ==================== EMAIL INTEGRATION ENDPOINTS ====================
+
+// Save email integration config
+app.post('/api/integrations/email', authenticateToken, async (req, res) => {
+  try {
+    const { email, password, smtpHost, smtpPort, imapHost, imapPort, provider } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email et mot de passe requis' });
+    }
+
+    // Test SMTP connection
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: smtpHost || getSmtpHost(email),
+      port: smtpPort || 587,
+      secure: false,
+      auth: { user: email, pass: password },
+      tls: { rejectUnauthorized: false }
+    });
+
+    await transporter.verify();
+
+    // Save to DB (encrypt password in production)
+    await dbRun(
+      `INSERT INTO email_integrations (id, user_id, email, password_hash, smtp_host, smtp_port, imap_host, imap_port, provider, active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
+       ON CONFLICT (user_id) DO UPDATE SET
+       email=$3, password_hash=$4, smtp_host=$5, smtp_port=$6, imap_host=$7, imap_port=$8, provider=$9, active=true`,
+      [require('uuid').v4(), req.user.userId, email, password, 
+       smtpHost || getSmtpHost(email), smtpPort || 587,
+       imapHost || getImapHost(email), imapPort || 993, provider || detectProvider(email)]
+    );
+
+    res.json({ success: true, message: 'Email connecté avec succès!' });
+  } catch (err) {
+    console.error('Email integration error:', err);
+    res.status(400).json({ error: 'Connexion impossible. Vérifiez vos identifiants.' });
+  }
+});
+
+// Get email integration status
+app.get('/api/integrations/email', authenticateToken, async (req, res) => {
+  try {
+    const result = await dbRun(
+      'SELECT email, provider, active, created_at FROM email_integrations WHERE user_id = $1',
+      [req.user.userId]
+    );
+    
+    if (result.length === 0) {
+      return res.json({ connected: false });
+    }
+    
+    res.json({ connected: true, ...result[0] });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Delete email integration
+app.delete('/api/integrations/email', authenticateToken, async (req, res) => {
+  try {
+    await dbRun('DELETE FROM email_integrations WHERE user_id = $1', [req.user.userId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Helper functions
+function detectProvider(email) {
+  if (email.includes('@gmail.com')) return 'gmail';
+  if (email.includes('@outlook.com') || email.includes('@hotmail.com') || email.includes('@live.com')) return 'outlook';
+  if (email.includes('@yahoo.com') || email.includes('@yahoo.fr')) return 'yahoo';
+  return 'custom';
+}
+
+function getSmtpHost(email) {
+  const provider = detectProvider(email);
+  const hosts = {
+    gmail: 'smtp.gmail.com',
+    outlook: 'smtp-mail.outlook.com',
+    yahoo: 'smtp.mail.yahoo.com',
+    custom: 'smtp.' + email.split('@')[1]
+  };
+  return hosts[provider];
+}
+
+function getImapHost(email) {
+  const provider = detectProvider(email);
+  const hosts = {
+    gmail: 'imap.gmail.com',
+    outlook: 'outlook.office365.com',
+    yahoo: 'imap.mail.yahoo.com',
+    custom: 'imap.' + email.split('@')[1]
+  };
+  return hosts[provider];
+}
+
+// ==================== REVIEWS ENDPOINTS ====================
+
+app.post('/api/reviews/submit', authenticateToken, async (req, res) => {
+  try {
+    const { rating, liked, improved, recommend, name } = req.body;
+
+    if (!rating || !liked || !improved) {
+      return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis' });
+    }
+
+    if (liked.length < 50 || improved.length < 50) {
+      return res.status(400).json({ error: 'Vos réponses doivent faire au moins 50 caractères' });
+    }
+
+    // Save review
+    await dbRun(
+      `INSERT INTO reviews (id, user_id, rating, liked, improved, recommend, reviewer_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [require('uuid').v4(), req.user.userId, rating, liked, improved, recommend || '', name || '']
+    );
+
+    // Extend trial by 30 days
+    await dbRun(
+      `UPDATE users SET trial_ends_date = NOW() + INTERVAL '30 days', status = 'trial'
+       WHERE id = $1`,
+      [req.user.userId]
+    );
+
+    // Update user in response
+    const userResult = await dbRun(
+      'SELECT id, email, plan, status, trial_ends_date FROM users WHERE id = $1',
+      [req.user.userId]
+    );
+
+    res.json({ success: true, message: '1 mois gratuit activé!', user: userResult[0] });
+  } catch (err) {
+    console.error('Review error:', err);
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ==================== ADMIN ENDPOINTS ====================
+
+const ADMIN_EMAIL = 'ahmedyoussef.berred@gmail.com';
+
+const isAdmin = (req, res, next) => {
+  if (req.user.email !== ADMIN_EMAIL) {
+    return res.status(403).json({ error: 'Accès refusé' });
+  }
+  next();
+};
+
+app.get('/api/admin/users', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const users = await dbRun('SELECT id, email, first_name, last_name, plan, status, trial_ends_date, created_at FROM users ORDER BY created_at DESC');
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/reviews', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const reviews = await dbRun('SELECT * FROM reviews ORDER BY created_at DESC');
+    res.json({ reviews });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/stats', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const users = await dbRun('SELECT plan, status FROM users');
+    const reviews = await dbRun('SELECT rating FROM reviews');
+    
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.status === 'active').length;
+    const trialUsers = users.filter(u => u.status === 'trial').length;
+    const agentUsers = users.filter(u => u.plan === 'agent' && u.status === 'active').length;
+    const agenceUsers = users.filter(u => u.plan === 'agence' && u.status === 'active').length;
+    const mrr = (agentUsers * 4900) + (agenceUsers * 19900);
+    const avgRating = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+
+    res.json({ totalUsers, activeUsers, trialUsers, mrr, avgRating: avgRating.toFixed(1), totalReviews: reviews.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});

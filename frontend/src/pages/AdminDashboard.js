@@ -1,263 +1,264 @@
-import React, { useState, useEffect } from 'react';
-import '../styles/Admin.css';
+import React, { useState, useEffect } from "react";
+import "../styles/AdminDashboard.css";
 
-function AdminDashboard({ token, user }) {
-  const [stats, setStats] = useState(null);
-  const [users, setUsers] = useState([]);
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+
+function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("stats");
+  const [data, setData] = useState({ users: [], reviews: [], stats: null, revenue: null });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (user?.plan === 'admin') {
-      fetchAdminStats();
-      fetchUsers();
-    }
-  }, []);
+  const token = localStorage.getItem("token");
 
-  const fetchAdminStats = async () => {
+  useEffect(() => { fetchAll(); }, []);
+
+  const fetchAll = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/admin/stats`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      const [usersRes, reviewsRes, statsRes] = await Promise.all([
+        fetch(`${API_URL}/api/admin/users`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/admin/reviews`, { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch(`${API_URL}/api/admin/stats`, { headers: { "Authorization": `Bearer ${token}` } }),
+      ]);
+      const users = await usersRes.json();
+      const reviews = await reviewsRes.json();
+      const stats = await statsRes.json();
+      setData({ users: users.users || [], reviews: reviews.reviews || [], stats: stats });
     } catch (err) {
-      console.error('Fetch admin stats error:', err);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/admin/users`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
-    } catch (err) {
-      console.error('Fetch users error:', err);
+      setError("Erreur de chargement");
     } finally {
       setLoading(false);
     }
   };
 
-  if (user?.plan !== 'admin') {
-    return (
-      <div className="admin-error">
-        <h2>❌ Accès Refusé</h2>
-        <p>Vous devez avoir un compte admin pour accéder à cette page.</p>
-      </div>
-    );
-  }
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString("fr-FR") : "—";
+  const formatMoney = (n) => n ? `${(n/100).toFixed(0)}€` : "0€";
+
+  const tabs = [
+    { id: "stats", label: "Vue d'ensemble", icon: "ti-chart-bar" },
+    { id: "users", label: "Utilisateurs", icon: "ti-users" },
+    { id: "reviews", label: "Avis clients", icon: "ti-star" },
+  ];
+
+  const stats = data.stats || {};
+  const users = data.users || [];
+  const reviews = data.reviews || [];
+
+  const mrr = users.filter(u => u.status === "active" && u.plan === "agent").length * 4900
+             + users.filter(u => u.status === "active" && u.plan === "agence").length * 19900;
+
+  const starAvg = reviews.length
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : "—";
 
   return (
-    <div className="admin-dashboard">
-      <div className="admin-header">
-        <h1>Admin Dashboard</h1>
-        <p className="admin-subtitle">Gestion globale de LeadForce</p>
-      </div>
+    <div className="admin-container">
+      <nav className="admin-nav">
+        <div className="admin-nav-left">
+          <div className="admin-logo">
+            <div className="admin-logo-box">LF</div>
+            <span className="admin-logo-text">LeadForce</span>
+            <span className="admin-badge">Admin</span>
+          </div>
+          <div className="admin-tabs">
+            {tabs.map(t => (
+              <span key={t.id} className={`admin-tab ${activeTab === t.id ? "active" : ""}`} onClick={() => setActiveTab(t.id)}>
+                <i className={`ti ${t.icon}`} aria-hidden="true"></i> {t.label}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="admin-nav-right">
+          <button className="admin-refresh" onClick={fetchAll}><i className="ti ti-refresh" aria-hidden="true"></i></button>
+          <button className="admin-logout" onClick={() => window.location.href = "/"}>← App</button>
+        </div>
+      </nav>
 
-      <div className="admin-tabs">
-        <button 
-          className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          Vue d'ensemble
-        </button>
-        <button 
-          className={`tab ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          Utilisateurs ({users.length})
-        </button>
-        <button 
-          className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          Analytics
-        </button>
-      </div>
+      <div className="admin-body">
+        {loading && <div className="admin-loading"><i className="ti ti-loader-2" aria-hidden="true"></i> Chargement...</div>}
+        {error && <div className="admin-error">{error}</div>}
 
-      {loading ? (
-        <div className="loading-spinner">Chargement des données...</div>
-      ) : (
-        <>
-          {activeTab === 'overview' && stats && (
-            <div className="admin-overview">
-              <div className="kpi-grid">
-                <div className="kpi-card">
-                  <div className="kpi-label">Utilisateurs Actifs</div>
-                  <div className="kpi-value">{stats.activeSubscriptions}</div>
-                  <div className="kpi-change">+{Math.floor(stats.activeSubscriptions * 0.1)} ce mois</div>
+        {!loading && activeTab === "stats" && (
+          <>
+            <div className="admin-header">
+              <h1>Vue d'ensemble</h1>
+              <p>Statistiques globales de LeadForce</p>
+            </div>
+
+            <div className="admin-stats-grid">
+              <div className="admin-stat-card">
+                <div className="astat-top">
+                  <div className="astat-icon purple"><i className="ti ti-users" aria-hidden="true"></i></div>
+                  <span className="astat-trend up">+{users.filter(u => new Date(u.created_at) > new Date(Date.now() - 7*86400000)).length} cette semaine</span>
                 </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Revenue Mensuel</div>
-                  <div className="kpi-value">{Math.round(stats.monthlyRevenue)}€</div>
-                  <div className="kpi-change">+15% vs mois dernier</div>
+                <p className="astat-number">{users.length}</p>
+                <p className="astat-label">Utilisateurs inscrits</p>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="astat-top">
+                  <div className="astat-icon green"><i className="ti ti-credit-card" aria-hidden="true"></i></div>
                 </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Leads Totaux</div>
-                  <div className="kpi-value">{stats.totalLeads}</div>
-                  <div className="kpi-change">+{Math.floor(stats.totalLeads * 0.2)} cette semaine</div>
+                <p className="astat-number">{formatMoney(mrr)}</p>
+                <p className="astat-label">MRR (revenus mensuels)</p>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="astat-top">
+                  <div className="astat-icon blue"><i className="ti ti-user-check" aria-hidden="true"></i></div>
                 </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">BON Leads</div>
-                  <div className="kpi-value">
-                    {stats.leadsByClassification?.find(l => l.classification === 'bon')?.count || 0}
+                <p className="astat-number">{users.filter(u => u.status === "active").length}</p>
+                <p className="astat-label">Abonnements actifs</p>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="astat-top">
+                  <div className="astat-icon amber"><i className="ti ti-star" aria-hidden="true"></i></div>
+                </div>
+                <p className="astat-number">{starAvg} ★</p>
+                <p className="astat-label">Note moyenne ({reviews.length} avis)</p>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="astat-top">
+                  <div className="astat-icon orange"><i className="ti ti-clock" aria-hidden="true"></i></div>
+                </div>
+                <p className="astat-number">{users.filter(u => u.status === "trial").length}</p>
+                <p className="astat-label">En période d'essai</p>
+              </div>
+
+              <div className="admin-stat-card">
+                <div className="astat-top">
+                  <div className="astat-icon red"><i className="ti ti-user-x" aria-hidden="true"></i></div>
+                </div>
+                <p className="astat-number">{users.filter(u => u.status === "expired").length}</p>
+                <p className="astat-label">Essais expirés</p>
+              </div>
+            </div>
+
+            <div className="admin-section-grid">
+              <div className="admin-card">
+                <div className="admin-card-header">
+                  <h3>Répartition des plans</h3>
+                </div>
+                <div className="plan-breakdown">
+                  <div className="plan-row">
+                    <span className="plan-name">Agent Solo (49€)</span>
+                    <div className="plan-bar-wrap">
+                      <div className="plan-bar" style={{width: `${users.length ? (users.filter(u=>u.plan==="agent").length/users.length)*100 : 0}%`, background: "#5B4CF5"}}></div>
+                    </div>
+                    <span className="plan-count">{users.filter(u=>u.plan==="agent").length}</span>
                   </div>
-                  <div className="kpi-change">
-                    {stats.totalLeads > 0 ? Math.round((stats.leadsByClassification?.find(l => l.classification === 'bon')?.count || 0) / stats.totalLeads * 100) : 0}% du total
+                  <div className="plan-row">
+                    <span className="plan-name">Agence (199€)</span>
+                    <div className="plan-bar-wrap">
+                      <div className="plan-bar" style={{width: `${users.length ? (users.filter(u=>u.plan==="agence").length/users.length)*100 : 0}%`, background: "#22C55E"}}></div>
+                    </div>
+                    <span className="plan-count">{users.filter(u=>u.plan==="agence").length}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="admin-charts">
-                <div className="chart-card">
-                  <h3>Distribution des Leads</h3>
-                  <div className="chart-container">
-                    <div className="chart-item">
-                      <span>🟢 BON</span>
-                      <div className="chart-bar">
-                        <div className="bar-fill" style={{
-                          width: stats.leadsByClassification?.find(l => l.classification === 'bon')?.count 
-                            ? `${(stats.leadsByClassification.find(l => l.classification === 'bon').count / stats.totalLeads * 100)}%`
-                            : '0%',
-                          background: '#22c55e'
-                        }}></div>
+              <div className="admin-card">
+                <div className="admin-card-header">
+                  <h3>Derniers inscrits</h3>
+                </div>
+                <div className="recent-users">
+                  {users.slice(0, 5).map(u => (
+                    <div key={u.id} className="recent-user-row">
+                      <div className="ru-avatar">{u.email[0].toUpperCase()}</div>
+                      <div className="ru-info">
+                        <p className="ru-email">{u.email}</p>
+                        <p className="ru-date">{formatDate(u.created_at)}</p>
                       </div>
-                      <span className="bar-label">
-                        {stats.leadsByClassification?.find(l => l.classification === 'bon')?.count || 0}
-                      </span>
+                      <span className={`ru-status ${u.status}`}>{u.status}</span>
                     </div>
-                    <div className="chart-item">
-                      <span>🟡 MOYEN</span>
-                      <div className="chart-bar">
-                        <div className="bar-fill" style={{
-                          width: stats.leadsByClassification?.find(l => l.classification === 'moyen')?.count 
-                            ? `${(stats.leadsByClassification.find(l => l.classification === 'moyen').count / stats.totalLeads * 100)}%`
-                            : '0%',
-                          background: '#f97316'
-                        }}></div>
-                      </div>
-                      <span className="bar-label">
-                        {stats.leadsByClassification?.find(l => l.classification === 'moyen')?.count || 0}
-                      </span>
-                    </div>
-                    <div className="chart-item">
-                      <span>🔵 FAIBLE</span>
-                      <div className="chart-bar">
-                        <div className="bar-fill" style={{
-                          width: stats.leadsByClassification?.find(l => l.classification === 'faible')?.count 
-                            ? `${(stats.leadsByClassification.find(l => l.classification === 'faible').count / stats.totalLeads * 100)}%`
-                            : '0%',
-                          background: '#9ca3af'
-                        }}></div>
-                      </div>
-                      <span className="bar-label">
-                        {stats.leadsByClassification?.find(l => l.classification === 'faible')?.count || 0}
-                      </span>
-                    </div>
-                  </div>
+                  ))}
+                  {users.length === 0 && <p className="empty-text">Aucun utilisateur</p>}
                 </div>
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          {activeTab === 'users' && (
-            <div className="admin-users">
-              <table className="users-table">
+        {!loading && activeTab === "users" && (
+          <>
+            <div className="admin-header">
+              <h1>Utilisateurs</h1>
+              <p>{users.length} inscrits au total</p>
+            </div>
+            <div className="admin-table-card">
+              <table className="admin-table">
                 <thead>
                   <tr>
                     <th>Email</th>
-                    <th>Nom</th>
+                    <th>Prénom</th>
                     <th>Plan</th>
-                    <th>Status</th>
-                    <th>Inscription</th>
-                    <th>Actions</th>
+                    <th>Statut</th>
+                    <th>Essai expire</th>
+                    <th>Inscrit le</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(user => (
-                    <tr key={user.id}>
-                      <td>{user.email}</td>
-                      <td>{user.first_name} {user.last_name}</td>
-                      <td>
-                        <span className={`badge badge-${user.plan}`}>
-                          {user.plan === 'agent' ? 'Agent' : 'Agence'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${user.status}`}>
-                          {user.status === 'active' ? '✓ Actif' : 'Inactif'}
-                        </span>
-                      </td>
-                      <td>{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
-                      <td>
-                        <a href={`/admin/users/${user.id}`} className="btn-link">
-                          Détails →
-                        </a>
-                      </td>
+                  {users.map(u => (
+                    <tr key={u.id}>
+                      <td className="td-email">{u.email}</td>
+                      <td>{u.first_name || "—"}</td>
+                      <td><span className="plan-pill">{u.plan}</span></td>
+                      <td><span className={`status-pill ${u.status}`}>{u.status}</span></td>
+                      <td>{formatDate(u.trial_ends_date)}</td>
+                      <td>{formatDate(u.created_at)}</td>
                     </tr>
                   ))}
+                  {users.length === 0 && (
+                    <tr><td colSpan={6} className="empty-td">Aucun utilisateur inscrit</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
-          )}
+          </>
+        )}
 
-          {activeTab === 'analytics' && (
-            <div className="admin-analytics">
-              <div className="analytics-card">
-                <h3>Métriques Clés</h3>
-                <div className="metrics-list">
-                  <div className="metric">
-                    <span>Utilisateurs Total</span>
-                    <strong>{stats?.totalUsers || 0}</strong>
-                  </div>
-                  <div className="metric">
-                    <span>Utilisateurs Actifs</span>
-                    <strong>{stats?.activeSubscriptions || 0}</strong>
-                  </div>
-                  <div className="metric">
-                    <span>Taux de Conversion</span>
-                    <strong>
-                      {stats?.totalUsers ? Math.round(stats.activeSubscriptions / stats.totalUsers * 100) : 0}%
-                    </strong>
-                  </div>
-                  <div className="metric">
-                    <span>Revenue Mensuel</span>
-                    <strong>{Math.round(stats?.monthlyRevenue || 0)}€</strong>
-                  </div>
-                  <div className="metric">
-                    <span>Revenue par User</span>
-                    <strong>
-                      {stats?.activeSubscriptions ? Math.round(stats.monthlyRevenue / stats.activeSubscriptions) : 0}€
-                    </strong>
-                  </div>
-                  <div className="metric">
-                    <span>Total Leads</span>
-                    <strong>{stats?.totalLeads || 0}</strong>
-                  </div>
-                </div>
-              </div>
+        {!loading && activeTab === "reviews" && (
+          <>
+            <div className="admin-header">
+              <h1>Avis clients</h1>
+              <p>{reviews.length} avis · Note moyenne: {starAvg} ★</p>
             </div>
-          )}
-        </>
-      )}
+            <div className="reviews-grid">
+              {reviews.map(r => (
+                <div key={r.id} className="review-card">
+                  <div className="review-card-header">
+                    <div className="review-stars">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
+                    <span className="review-date">{formatDate(r.created_at)}</span>
+                  </div>
+                  {r.reviewer_name && <p className="review-name">{r.reviewer_name}</p>}
+                  <div className="review-section">
+                    <p className="review-section-label">Ce qui a plu</p>
+                    <p className="review-text">{r.liked}</p>
+                  </div>
+                  <div className="review-section">
+                    <p className="review-section-label">À améliorer</p>
+                    <p className="review-text">{r.improved}</p>
+                  </div>
+                  {r.recommend && (
+                    <div className="review-recommend">
+                      <i className="ti ti-thumb-up" aria-hidden="true"></i> {r.recommend}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {reviews.length === 0 && (
+                <div className="empty-state">
+                  <i className="ti ti-star" aria-hidden="true"></i>
+                  <p>Aucun avis pour le moment</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
