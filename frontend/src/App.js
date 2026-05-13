@@ -3,46 +3,41 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import TrialExpired from "./pages/TrialExpired";
 import AdminDashboard from "./pages/AdminDashboard";
+import Success from "./pages/Success";
+import Questionnaire from "./pages/Questionnaire";
 
 function App() {
   const [page, setPage] = useState("loading");
 
   useEffect(() => {
     const path = window.location.pathname;
-    
-    // Route admin secrète
+
+    if (path === "/success") { setPage("success"); return; }
+    if (path === "/questionnaire") { setPage("questionnaire"); return; }
+
     if (path === "/admin-secret-xyz") {
       const token = localStorage.getItem("token");
       const userStr = localStorage.getItem("user");
       if (!token || !userStr) { setPage("login"); return; }
       try {
         const user = JSON.parse(userStr);
-        if (user.email === "ahmedyoussef.berred@gmail.com") {
-          setPage("admin");
-        } else {
-          setPage("dashboard");
-        }
+        if (user.email === "ahmedyoussef.berred@gmail.com") setPage("admin");
+        else setPage("dashboard");
       } catch { setPage("login"); }
       return;
     }
 
     const token = localStorage.getItem("token");
     const userStr = localStorage.getItem("user");
-
     if (!token || !userStr) { setPage("login"); return; }
 
     try {
       const user = JSON.parse(userStr);
       const trialEnd = user.trial_ends_date ? new Date(user.trial_ends_date) : null;
       const now = new Date();
-
-      if (user.status === "active") {
-        setPage("dashboard");
-      } else if (trialEnd && trialEnd < now) {
-        setPage("trial_expired");
-      } else {
-        setPage("dashboard");
-      }
+      if (user.status === "active") setPage("dashboard");
+      else if (trialEnd && trialEnd < now) setPage("trial_expired");
+      else setPage("dashboard");
     } catch { setPage("login"); }
   }, []);
 
@@ -50,6 +45,8 @@ function App() {
   if (page === "login") return <Login />;
   if (page === "admin") return <AdminDashboard />;
   if (page === "trial_expired") return <TrialExpired />;
+  if (page === "success") return <Success />;
+  if (page === "questionnaire") return <Questionnaire />;
   return <Dashboard />;
 }
 
