@@ -369,7 +369,9 @@ function Dashboard() {
                     <li key={f}><i className="ti ti-check" aria-hidden="true"></i> {f}</li>
                   ))}
                 </ul>
-                <button className="pricing-btn featured-btn" onClick={() => handleUpgrade("agence")} disabled={loadingStripe}>{loadingStripe ? "Chargement..." : "Commencer — 199€/mois"}</button>
+               <button className="pricing-btn featured-btn" onClick={() => {
+  alert("🚧 La formule Agence arrive très prochainement!\n\nVous serez notifié par email dès qu'elle sera disponible.\n\nEn attendant, commencez avec Agent Solo!");
+}} >
               </div>
             </div>
             <div className="pricing-note"><i className="ti ti-shield-check" aria-hidden="true"></i><p>Paiement sécurisé via Stripe — Annulation possible à tout moment — Sans engagement</p></div>
