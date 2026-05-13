@@ -113,42 +113,9 @@ function Dashboard() {
     const userStr = localStorage.getItem("user");
     if (!userStr || !token) { window.location.href = "/"; return; }
     try { setUser(JSON.parse(userStr)); } catch { window.location.href = "/"; }
-   fetchEmailStatus();
-    fetchLeads();
+    fetchEmailStatus();
   }, []);
 
-  const fetchLeads = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/leads`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.leads && data.leads.length > 0) {
-        const formattedLeads = data.leads.map(l => ({
-          id: l.id,
-          name: `${l.first_name} ${l.last_name}`,
-          type: l.type || "Achat",
-          detail: l.city || "Non renseigné",
-          budget: l.budget || "Non renseigné",
-          channel: l.channel || "email",
-          score: l.score || "moyen",
-          stage: l.stage || "nouveau",
-          date: new Date(l.created_at).toLocaleDateString("fr-FR"),
-          timeline: [
-            { icon: "ti-mail", label: "Message reçu", desc: "Prospect intéressé", time: new Date(l.created_at).toLocaleDateString("fr-FR"), done: true },
-            { icon: "ti-robot", label: "Qualification automatique", desc: `Score ${l.score?.toUpperCase()}`, time: new Date(l.created_at).toLocaleDateString("fr-FR"), done: true },
-            { icon: "ti-bell", label: "Agent notifié", desc: "Notification envoyée", time: new Date(l.created_at).toLocaleDateString("fr-FR"), done: true },
-            { icon: "ti-calendar", label: "Visite à programmer", desc: "En attente", time: "", done: ["visite","offre","vendu"].includes(l.stage), active: l.stage === "visite" },
-            { icon: "ti-file-text", label: "Offre à soumettre", desc: "En attente", time: "", done: ["offre","vendu"].includes(l.stage), active: l.stage === "offre" },
-            { icon: "ti-home-check", label: "Achat finalisé", desc: "En attente", time: "", done: l.stage === "vendu" },
-          ]
-        }));
-        setLeads(formattedLeads);
-      }
-    } catch (err) {
-      console.error("Erreur:", err);
-    }
-  };
   const fetchEmailStatus = async () => {
     try {
       const res = await fetch(`${API_URL}/api/integrations/email`, { headers: { "Authorization": `Bearer ${token}` } });
