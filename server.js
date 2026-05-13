@@ -548,7 +548,39 @@ app.post('/api/auth/send-code', async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-
+const sendVerificationEmail = async (email, code) => {
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'LeadForce <onboarding@resend.dev>',
+        to: [email],
+        subject: 'Votre code de vérification LeadForce',
+        html: `
+          <div style="font-family: Inter, sans-serif; max-width: 500px; margin: 0 auto; padding: 2rem;">
+            <div style="margin-bottom: 1.5rem;">
+              <span style="display:inline-block; width:28px; height:28px; background:#5B4CF5; border-radius:7px; color:white; font-weight:700; font-size:11px; text-align:center; line-height:28px;">LF</span>
+              <span style="font-size:16px; font-weight:600; color:#1A1A1A; margin-left:8px;">LeadForce</span>
+            </div>
+            <h2 style="font-size:22px; color:#1A1A1A; margin-bottom:8px;">Vérifiez votre email</h2>
+            <p style="color:#888; margin-bottom:2rem;">Code valable 15 minutes:</p>
+            <div style="background:#F0EFFE; border-radius:12px; padding:1.5rem; text-align:center; margin-bottom:2rem;">
+              <span style="font-size:40px; font-weight:700; color:#5B4CF5; letter-spacing:0.3em;">${code}</span>
+            </div>
+          </div>
+        `
+      })
+    });
+    const data = await response.json();
+    console.log('✅ Email sent:', data.id);
+  } catch (err) {
+    console.error('❌ Email error:', err);
+  }
+};
 app.post('/api/auth/verify-and-register', async (req, res) => {
   try {
     const { email, code } = req.body;
