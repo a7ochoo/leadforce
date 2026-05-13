@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.guide-container { padding: 0; font-family: 'Inter', sans-serif; }
+
+.guide-header { margin-bottom: 1.5rem; }
+.guide-header h1 { font-size: 20px; font-weight: 600; color: #1A1A1A; letter-spacing: -0.03em; margin-bottom: 3px; }
+.guide-header p { font-size: 13px; color: #888; }
+
+.guide-card { background: white; border: 0.5px solid #E5E4E0; border-radius: 12px; padding: 1.25rem; margin-bottom: 14px; }
+
+.guide-section-title { font-size: 13px; font-weight: 600; color: #1A1A1A; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1.25rem; }
+
+/* FLOW */
+.flow-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.flow-step { text-align: center; flex: 1; min-width: 80px; }
+.flow-icon { font-size: 24px; margin-bottom: 6px; }
+.flow-label { font-size: 11px; color: #555; line-height: 1.4; }
+.flow-arrow { font-size: 18px; color: #5B4CF5; font-weight: 600; flex-shrink: 0; }
+
+/* PORTAILS */
+.portails-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.portail-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 1px solid #E5E4E0; border-radius: 10px; background: white; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+.portail-btn:hover { border-color: #5B4CF5; background: #F0EFFE; }
+.portail-btn.active { border-width: 2px; }
+.portail-logo { font-size: 24px; }
+.portail-name { font-size: 12px; font-weight: 500; color: #1A1A1A; }
+
+/* INSTRUCTIONS */
+.instructions-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid #E5E4E0; }
+.portail-logo-big { font-size: 32px; }
+.instructions-header h2 { font-size: 16px; font-weight: 600; color: #1A1A1A; margin-bottom: 2px; }
+.instructions-header p { font-size: 12px; color: #888; }
+.instructions-header code { background: #F0EFFE; color: #5B4CF5; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+
+.steps-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.25rem; }
+.step-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid #E5E4E0; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.step-item:hover { border-color: #5B4CF5; background: #FAFAF9; }
+.step-item.active { border-color: #5B4CF5; background: #F0EFFE; }
+.step-item.done { border-color: #22C55E; background: #F0FDF4; }
+.step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; background: #E5E4E0; color: #555; }
+.step-item.active .step-num { background: #5B4CF5; color: white; }
+.step-item.done .step-num { background: #22C55E; color: white; }
+.step-text { font-size: 13px; color: #555; line-height: 1.5; }
+.step-item.active .step-text { color: #1A1A1A; font-weight: 500; }
+.step-item.done .step-text { color: #888; }
+
+.steps-nav { display: flex; align-items: center; justify-content: space-between; }
+.step-btn-back { padding: 9px 16px; background: white; border: 1px solid #E5E4E0; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; color: #555; transition: all 0.15s; }
+.step-btn-back:hover { background: #F5F4F1; }
+.step-btn-back:disabled { opacity: 0.4; cursor: not-allowed; }
+.step-btn-next { padding: 9px 20px; background: #5B4CF5; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s; }
+.step-btn-next:hover { background: #4A3CE0; }
+.step-done { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: #22C55E; }
+
+/* NOTE */
+.guide-note { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #888; background: #FAFAF9; border: 0.5px solid #E5E4E0; border-radius: 10px; padding: 12px; }
+.guide-note i { font-size: 15px; color: #5B4CF5; flex-shrink: 0; margin-top: 1px; }
