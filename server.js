@@ -531,4 +531,43 @@ app.get('/api/admin/stats', authenticateToken, isAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});const pendingRegistrations = new Map();
+
+app.post('/api/auth/send-code', async (req, res) => {
+  try {
+    const { email, password, firstName, lastName } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
+    const existing = await dbRun('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.length > 0) return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + 15 * 60 * 1000;
+    pendingRegistrations.set(email, { password, firstName, lastName, code, expires });
+    await sendVerificationEmail(email, code);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/verify-and-register', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    const pending = pendingRegistrations.get(email);
+    if (!pending) return res.status(400).json({ error: 'Aucune inscription en attente' });
+    if (Date.now() > pending.expires) { pendingRegistrations.delete(email); return res.status(400).json({ error: 'Code expiré' }); }
+    if (pending.code !== code) return res.status(400).json({ error: 'Code incorrect' });
+    const hashedPassword = await bcrypt.hash(pending.password, 10);
+    const userId = uuidv4();
+    const trialEndsDate = new Date();
+    trialEndsDate.setDate(trialEndsDate.getDate() + 7);
+    const result = await dbRun(
+      `INSERT INTO users (id, email, password_hash, first_name, last_name, plan, trial_ends_date, status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'trial') RETURNING id, email, plan, status, trial_ends_date`,
+      [userId, email, hashedPassword, pending.firstName, pending.lastName, 'agent', trialEndsDate]
+    );
+    pendingRegistrations.delete(email);
+    const token = jwt.sign({ userId: result[0].id, email: result[0].email }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+    res.json({ success: true, user: result[0], token });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
