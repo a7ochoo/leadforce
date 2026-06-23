@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Dashboard.css";
-
+import Onboarding from "./Onboarding";
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 const PIPELINE_STAGES = [
@@ -48,6 +48,7 @@ function Timeline({ items }) {
 function Dashboard() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("pipeline");
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [leads, setLeads] = useState(MOCK_LEADS);
   const [loadingStripe, setLoadingStripe] = useState(false);
@@ -161,7 +162,9 @@ function Dashboard() {
           <div className="trial-pill">{getTrialDays()}j d'essai</div>
           <div className="nav-notif"><i className="ti ti-bell" aria-hidden="true"></i></div>
           <div className="nav-avatar">{getInitials()}</div>
-          <button onClick={() => { localStorage.clear(); window.location.href = "/"; }} className="logout-btn">Déconnexion</button>
+          <button onClick={() => { localStorage.clear(); window.location.href = "/"; }} className="logout-btn">Déconnexion<button className="tuto-btn" onClick={() => setShowOnboarding(true)}>
+            <i className="ti ti-help-circle" aria-hidden="true"></i> Tuto
+          </button> </button>
         </div>
       </nav>
 
@@ -396,12 +399,11 @@ function Dashboard() {
                 <button className="danger-btn" onClick={() => { localStorage.clear(); window.location.href = "/"; }}><i className="ti ti-logout" aria-hidden="true"></i> Se déconnecter</button>
               </div>
             </div>
-          </>
+         </>
         )}
-
       </div>
+      {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
     </div>
   );
 }
 
-export default Dashboard;
